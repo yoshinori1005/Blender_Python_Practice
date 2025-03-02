@@ -1,4 +1,5 @@
 import bpy
+import random
 
 
 # 基本的なクラス
@@ -106,5 +107,30 @@ class ObjectScaler:
 
 ico_sphere = ObjectScaler()
 ico_sphere.add_ico_sphere()
-# ico_sphere.double_scale()
-ico_sphere.half_scale()
+ico_sphere.double_scale()
+# ico_sphere.half_scale()
+
+
+# ランダム位置への移動
+class RandomMover:
+    def add_monkey(self):
+        bpy.ops.mesh.primitive_monkey_add()
+
+    def move_random_x(self):
+        obj = bpy.context.active_object
+        obj.location.x = random.randint(-10, 10)
+
+    def move_random_y(self):
+        obj = bpy.context.active_object
+        obj.location.y = random.randint(-10, 10)
+
+    def move_random_z(self):
+        obj = bpy.context.active_object
+        obj.location.z = random.randint(-10, 10)
+
+
+random_obj = RandomMover()
+random_obj.add_monkey()
+random_obj.move_random_x()
+random_obj.move_random_y()
+random_obj.move_random_zax
