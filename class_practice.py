@@ -59,3 +59,13 @@ create_cube.add_cube()
 create_cube.move_x(2)
 create_cube.move_y(5)
 create_cube.move_z(3)
+
+
+# オブジェクトの削除
+class ObjectDeleter:
+    def delete_object(self):
+        bpy.ops.object.delete()
+
+
+obj_delete = ObjectDeleter()
+obj_delete.delete_object()
