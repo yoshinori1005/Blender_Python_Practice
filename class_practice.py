@@ -173,3 +173,15 @@ class ModifierManager:
 cone = ModifierManager()
 cone.add_cone()
 cone.apply_subsurf(2, 3)
+
+
+# オブジェクトのリスト管理
+class SceneObjectList:
+    def list_objects(self):
+        objects = bpy.data.objects
+        for obj in objects:
+            print(obj.name)
+
+
+objects = SceneObjectList()
+objects.list_objects()
