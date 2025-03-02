@@ -157,3 +157,19 @@ class RandomColorMaterial:
 cylinder = RandomColorMaterial()
 cylinder.add_cylinder()
 cylinder.apply_random_material()
+
+
+# モディファイア適用
+class ModifierManager:
+    def add_cone(self):
+        bpy.ops.mesh.primitive_cone_add()
+
+    def apply_subsurf(self, viewport_lvl, render_lvl):
+        bpy.ops.object.modifier_add(type="SUBSURF")
+        bpy.context.object.modifiers["Subdivision"].levels = viewport_lvl
+        bpy.context.object.modifiers["Subdivision"].render_levels = render_lvl
+
+
+cone = ModifierManager()
+cone.add_cone()
+cone.apply_subsurf(2, 3)
