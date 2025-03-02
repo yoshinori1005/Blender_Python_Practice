@@ -132,19 +132,20 @@ class ObjectRemoveModifier(bpy.types.Operator):
 # オブジェクトの複製
 class ObjectDuplicate(bpy.types.Operator):
     """Object Duplicate Operation"""
-    bl_idname="mesh.object_duplicate"
-    bl_label="Object Duplicate"
-    
+
+    bl_idname = "mesh.object_duplicate"
+    bl_label = "Object Duplicate"
+
     def execute(self, context):
-        obj=context.active_object
-        
+        obj = context.active_object
+
         if not obj:
-            self.report({"WARNING"},"No active selected object")
-            return{"CANCELLED"}
-        
+            self.report({"WARNING"}, "No active selected object")
+            return {"CANCELLED"}
+
         for i in range(3):
-            new_obj=obj.copy()
-            new_obj.location.x+=(i+1)*2
+            new_obj = obj.copy()
+            new_obj.location.x += (i + 1) * 2
             context.collection.objects.link(new_obj)
         return {"FINISHED"}
 
@@ -152,56 +153,64 @@ class ObjectDuplicate(bpy.types.Operator):
 # マテリアルをランダムに設定
 class RandomMaterialSet(bpy.types.Operator):
     """Random Material Set to Selected Object"""
-    bl_idname="object.random_material_set"
-    bl_label="Random Material Set to Object"
-    
+
+    bl_idname = "object.random_material_set"
+    bl_label = "Random Material Set to Object"
+
     def execute(self, context):
-        obj=context.active_object
+        obj = context.active_object
         if not obj:
-            self.report({"WARNING"},"No active selected object")
-            return{"CANCELLED"}
-        
-        random_color_material=bpy.data.materials.new(name="Random Color Material")
-        random_color_material.diffuse_color=(
+            self.report({"WARNING"}, "No active selected object")
+            return {"CANCELLED"}
+
+        random_color_material = bpy.data.materials.new(name="Random Color Material")
+        random_color_material.diffuse_color = (
             random.random(),
             random.random(),
-            random.random(),1.0
-            )
+            random.random(),
+            1.0,
+        )
         obj.data.materials.append(random_color_material)
-        
-        self.report({"INFO"},"Applied random material")
+
+        self.report({"INFO"}, "Applied random material")
         return {"FINISHED"}
 
 
 # メッシュオブジェクトの三角化
 class ApplyTriangulateModifier(bpy.types.Operator):
     """Triangulate Selected Object"""
-    bl_idname="object.apply_triangulate"
-    bl_label="Apply Triangulate Modifier"
-    
+
+    bl_idname = "object.apply_triangulate"
+    bl_label = "Apply Triangulate Modifier"
+
     def execute(self, context):
         obj = context.active_object
         if obj is None or obj.type != "MESH":
-            self.report({"WARNING"},"Select the mesh object")
-            return{"CANCELLED"}
-        
+            self.report({"WARNING"}, "Select the mesh object")
+            return {"CANCELLED"}
+
         bpy.ops.object.modifier_add(type="TRIANGULATE")
-        self.report({"INFO"},"Face Triangulate Selected Object")
+        self.report({"INFO"}, "Face Triangulate Selected Object")
         return {"FINISHED"}
 
 
 # ワールド背景色をランダムに変更する
 class RandomizeWorldColor(bpy.types.Operator):
-    bl_idname="world.randomize_color"
-    bl_label="Randomize World Color"
-    
+    bl_idname = "world.randomize_color"
+    bl_label = "Randomize World Color"
+
     def execute(self, context):
         if bpy.data.worlds:
-            world=bpy.data.worlds["World"]
-            
+            world = bpy.data.worlds["World"]
+
             if world.use_nodes:
-                bg=world.node_tree.nodes["Background"].inputs[0]
-                bg.default_value=(random.random(),random.random(),random.random(),1)
+                bg = world.node_tree.nodes["Background"].inputs[0]
+                bg.default_value = (
+                    random.random(),
+                    random.random(),
+                    random.random(),
+                    1,
+                )
         return {"FINISHED"}
 
 
