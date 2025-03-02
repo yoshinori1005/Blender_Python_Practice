@@ -69,3 +69,22 @@ class ObjectDeleter:
 
 obj_delete = ObjectDeleter()
 obj_delete.delete_object()
+
+
+# シーンをカスタマイズする
+class CustomSceneManager:
+    def add_sphere(self):
+        bpy.ops.mesh.primitive_uv_sphere_add()
+
+    def add_torus(self):
+        bpy.ops.mesh.primitive_torus_add()
+
+    def clear_scene(self):
+        bpy.ops.object.select_all(action="SELECT")
+        bpy.ops.object.delete()
+
+
+sm = CustomSceneManager()
+sm.add_sphere()
+sm.add_torus()
+sm.clear_scene()
