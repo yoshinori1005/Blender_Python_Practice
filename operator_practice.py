@@ -189,4 +189,23 @@ class RandomMaterialSet(bpy.types.Operator):
         
         self.report({"INFO"},"Applied random material")
         return {"FINISHED"}
+
 bpy.utils.register_class(RandomMaterialSet)
+
+# メッシュオブジェクトの三角化
+class ObjectTriangulate(bpy.types.Operator):
+    """Triangulate Selected Object"""
+    bl_idname="mesh.face_triangulate"
+    bl_label="Face Triangulate Selected Object"
+    
+    def execute(self, context):
+        obj=context.active_object
+        if not obj:
+            self.report({"WARNING"},"No active selected object")
+            return{"CANCELLED"}
+        
+        bpy.ops.object.modifier_add(type="TRIANGULATE")
+        self.report({"INFO"},"Face Triangulate Selected Object")
+        return {"FINISHED"}
+    
+bpy.utils.register_class(ObjectTriangulate)
