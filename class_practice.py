@@ -88,3 +88,23 @@ sm = CustomSceneManager()
 sm.add_sphere()
 sm.add_torus()
 sm.clear_scene()
+
+
+# スケール変更クラス
+class ObjectScaler:
+    def add_ico_sphere(self):
+        bpy.ops.mesh.primitive_ico_sphere_add()
+
+    def double_scale(self):
+        obj = bpy.context.active_object
+        obj.scale *= 2
+
+    def half_scale(self):
+        obj = bpy.context.active_object
+        obj.scale *= 0.5
+
+
+ico_sphere = ObjectScaler()
+ico_sphere.add_ico_sphere()
+# ico_sphere.double_scale()
+ico_sphere.half_scale()
