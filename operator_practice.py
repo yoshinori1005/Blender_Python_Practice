@@ -18,9 +18,6 @@ class SimpleOperator(bpy.types.Operator):
         return {"FINISHED"}
 
 
-bpy.utils.register_class(SimpleOperator)
-
-
 # オブジェクトの移動オペレーター
 class MoveObjectOperator(bpy.types.Operator):
     #     """Random Move Selected Object Along Y-Axis"""
@@ -39,9 +36,6 @@ class MoveObjectOperator(bpy.types.Operator):
         return {"FINISHED"}
 
 
-bpy.utils.register_class(MoveObjectOperator)
-
-
 # オブジェクトのスケール変更
 class ScaleChangeObject(bpy.types.Operator):
     """Scale Change Selected Object"""
@@ -58,9 +52,6 @@ class ScaleChangeObject(bpy.types.Operator):
         obj.scale *= 1.5
         self.report({"INFO"}, "Object scaled by 1.5")
         return {"FINISHED"}
-
-
-bpy.utils.register_class(ScaleChangeObject)
 
 
 # ライトを追加し、ランダムな色を設定する
@@ -91,9 +82,6 @@ class AddRandomColorLights(bpy.types.Operator):
         return {"FINISHED"}
 
 
-bpy.utils.register_class(AddRandomColorLights)
-
-
 # カメラを特定の位置に配置
 class AddCameraOperator(bpy.types.Operator):
     """Add Camera in the scene"""
@@ -114,9 +102,6 @@ class AddCameraOperator(bpy.types.Operator):
 
         self.report({"INFO"}, "Camera positioned at (0,-5,3)")
         return {"FINISHED"}
-
-
-bpy.utils.register_class(AddCameraOperator)
 
 
 # モディファイアの一喝削除
@@ -144,8 +129,6 @@ class ObjectRemoveModifier(bpy.types.Operator):
         return {"FINISHED"}
 
 
-bpy.utils.register_class(ObjectRemoveModifier)
-
 # オブジェクトの複製
 class ObjectDuplicate(bpy.types.Operator):
     """Object Duplicate Operation"""
@@ -165,7 +148,6 @@ class ObjectDuplicate(bpy.types.Operator):
             context.collection.objects.link(new_obj)
         return {"FINISHED"}
 
-bpy.utils.register_class(ObjectDuplicate)
 
 # マテリアルをランダムに設定
 class RandomMaterialSet(bpy.types.Operator):
@@ -190,7 +172,6 @@ class RandomMaterialSet(bpy.types.Operator):
         self.report({"INFO"},"Applied random material")
         return {"FINISHED"}
 
-bpy.utils.register_class(RandomMaterialSet)
 
 # メッシュオブジェクトの三角化
 class ApplyTriangulateModifier(bpy.types.Operator):
@@ -207,5 +188,30 @@ class ApplyTriangulateModifier(bpy.types.Operator):
         bpy.ops.object.modifier_add(type="TRIANGULATE")
         self.report({"INFO"},"Face Triangulate Selected Object")
         return {"FINISHED"}
+
+
+# ワールド背景色をランダムに変更する
+class RandomizeWorldColor(bpy.types.Operator):
+    bl_idname="world.randomize_color"
+    bl_label="Randomize World Color"
     
+    def execute(self, context):
+        if bpy.data.worlds:
+            world=bpy.data.worlds["World"]
+            
+            if world.use_nodes:
+                bg=world.node_tree.nodes["Background"].inputs[0]
+                bg.default_value=(random.random(),random.random(),random.random(),1)
+        return {"FINISHED"}
+
+
+bpy.utils.register_class(SimpleOperator)
+bpy.utils.register_class(MoveObjectOperator)
+bpy.utils.register_class(ScaleChangeObject)
+bpy.utils.register_class(AddRandomColorLights)
+bpy.utils.register_class(AddCameraOperator)
+bpy.utils.register_class(ObjectRemoveModifier)
+bpy.utils.register_class(ObjectDuplicate)
+bpy.utils.register_class(RandomMaterialSet)
 bpy.utils.register_class(ApplyTriangulateModifier)
+bpy.utils.register_class(RandomizeWorldColor)
