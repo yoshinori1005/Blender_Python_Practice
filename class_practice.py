@@ -133,4 +133,27 @@ random_obj = RandomMover()
 random_obj.add_monkey()
 random_obj.move_random_x()
 random_obj.move_random_y()
-random_obj.move_random_zax
+random_obj.move_random_z()
+
+
+# ランダムな色のマテリアルを適用する
+class RandomColorMaterial:
+    def add_cylinder(self):
+        bpy.ops.mesh.primitive_cylinder_add()
+
+    def apply_random_material(self):
+        random_material = bpy.data.materials.new("Random Material")
+        random_material.diffuse_color = (
+            random.random(),
+            random.random(),
+            random.random(),
+            1.0,
+        )
+
+        obj = bpy.context.active_object
+        obj.data.materials.append(random_material)
+
+
+cylinder = RandomColorMaterial()
+cylinder.add_cylinder()
+cylinder.apply_random_material()
