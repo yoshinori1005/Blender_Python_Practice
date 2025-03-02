@@ -166,3 +166,27 @@ class ObjectDuplicate(bpy.types.Operator):
         return {"FINISHED"}
 
 bpy.utils.register_class(ObjectDuplicate)
+
+# マテリアルをランダムに設定
+class RandomMaterialSet(bpy.types.Operator):
+    """Random Material Set to Selected Object"""
+    bl_idname="object.random_material_set"
+    bl_label="Random Material Set to Object"
+    
+    def execute(self, context):
+        obj=context.active_object
+        if not obj:
+            self.report({"WARNING"},"No active selected object")
+            return{"CANCELLED"}
+        
+        random_color_material=bpy.data.materials.new(name="Random Color Material")
+        random_color_material.diffuse_color=(
+            random.random(),
+            random.random(),
+            random.random(),1.0
+            )
+        obj.data.materials.append(random_color_material)
+        
+        self.report({"INFO"},"Applied random material")
+        return {"FINISHED"}
+bpy.utils.register_class(RandomMaterialSet)
