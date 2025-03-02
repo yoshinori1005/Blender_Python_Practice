@@ -34,3 +34,28 @@ a = InstanceCount()
 InstanceCount.get_instance_count()
 b = InstanceCount()
 InstanceCount.get_instance_count()
+
+
+# オブジェクトの移動
+class ObjectMover:
+    def add_cube(self):
+        bpy.ops.mesh.primitive_cube_add()
+
+    def move_x(self, amount):
+        obj = bpy.context.active_object
+        obj.location.x = amount
+
+    def move_y(self, amount):
+        obj = bpy.context.active_object
+        obj.location.y = amount
+
+    def move_z(self, amount):
+        obj = bpy.context.active_object
+        obj.location.z = amount
+
+
+create_cube = ObjectMover()
+create_cube.add_cube()
+create_cube.move_x(2)
+create_cube.move_y(5)
+create_cube.move_z(3)
