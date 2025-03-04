@@ -324,7 +324,7 @@ def separate_faces_and_animate_scale(node_tree, node_x_location, node_location_s
     scale_elements_geo_nodes.append(bottom_scale_elements_node)
 
     # Fカーブにサイクルモディファイアを追加
-    for fcurve in node_tree.animation_data.action.fcurves.values():
+    for fcurve in node_tree.animation_data.action.fcurves:
         fcurve.modifiers.new(type="CYCLES")
 
     node_x_location += node_location_step_x
