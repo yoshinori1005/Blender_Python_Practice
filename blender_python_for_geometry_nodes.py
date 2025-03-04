@@ -157,7 +157,7 @@ def set_scene_props(fps, frame_count):
 def scene_setup():
     fps = 30
     loop_seconds = 12
-    frame_count = fps + loop_seconds
+    frame_count = fps * loop_seconds
 
     seed = 0
     if seed:
@@ -178,22 +178,176 @@ def link_nodes_by_mesh_socket(node_tree, from_node, to_node):
     node_tree.links.new(from_node.outputs["Mesh"], to_node.inputs["Mesh"])
 
 
-def create_node(node_tree, type_name, node_x_location, node_location_step_x=0):
+def create_node(
+    node_tree, type_name, node_x_location, node_location_step_x=0, node_y_location=0
+):
     """
     指定されたタイプのノードを作成し、X 軸上のノードの位置を設定、更新
     ノード オブジェクトと、次のノードの X 軸上の次の位置を返す
     """
     node_obj = node_tree.nodes.new(type=type_name)
     node_obj.location.x = node_x_location
+    node_obj.location.y = node_y_location
     node_x_location += node_location_step_x
 
     return node_obj, node_x_location
+
+
+# ランダム値ノード作成関数
+def create_random_bool_value_node(node_tree, node_x_location, node_y_location):
+
+    # ランダム値ノード作成
+    separate_geo_random_value_node, node_x_location = create_node(
+        node_tree,
+        "FunctionNodeRandomValue",
+        node_x_location,
+        node_y_location=node_y_location,
+    )
+    target_output_type = "BOOLEAN"
+    separate_geo_random_value_node.data_type = target_output_type
+
+    # ランダム値ノードのアウトプットソケットのタイプを確認する（簡潔コード）
+    random_value_node_output_lookup = {
+        socket.type: socket
+        for socket in separate_geo_random_value_node.outputs.values()
+    }
+
+    # 複数行で確認するコード
+    # sockets = dict()
+    # for socket in separate_geo_random_value_node.outputs.values():
+    #     sockets[socket.type] = socket
+
+    import pprint
+
+    pprint.pprint(random_value_node_output_lookup)
+
+    # ランダム値ノードのアウトプットソケットを指定
+    target_output_socket = random_value_node_output_lookup[target_output_type]
+
+    return target_output_socket
+
+
+# ジオメトリ分離ノード作成関数
+def create_separate_geo_node(node_tree, node_x_location, node_location_step_x):
+
+    # ランダム値ノードの作成
+    random_value_node_output_socket = create_random_bool_value_node(
+        node_tree, node_x_location, node_y_location=-200
+    )
+
+    # ジオメトリ分離ノードの作成
+    separate_geometry_node, node_x_location = create_node(
+        node_tree,
+        "GeometryNodeSeparateGeometry",
+        node_x_location,
+        node_location_step_x,
+    )
+    separate_geometry_node.domain = "FACE"
+
+    # ランダム値ノードをジオメトリ分離ノードに接続
+    to_node = separate_geometry_node
+    node_tree.links.new(random_value_node_output_socket, to_node.inputs["Selection"])
+
+    return separate_geometry_node, node_x_location
+
+
+# 要素スケールノード作成関数
+def create_scale_element_geo_node(
+    node_tree, geo_selection_node_output, node_x_location, node_y_location
+):
+    # ランダム値ノード呼び出し
+    random_value_node_output_socket = create_random_bool_value_node(
+        node_tree,
+        node_x_location,
+        node_y_location=node_y_location - 200,
+    )
+
+    # 要素スケールノードの作成
+    scale_elements_node, node_x_location = create_node(
+        node_tree,
+        "GeometryNodeScaleElements",
+        node_x_location,
+        node_y_location=node_y_location,
+    )
+    scale_elements_node.inputs["Scale"].default_value = 0.8
+
+    start_frame = random.randint(0, 150)
+
+    # アニメーション作成
+    create_data_animation_loop(
+        scale_elements_node.inputs["Scale"],
+        "default_value",
+        start_value=0.0,
+        mid_value=0.8,
+        start_frame=start_frame,
+        loop_length=90,
+        linear_extrapolation=False,
+    )
+
+    # ランダム値ノードを要素スケールノードの選択へ接続
+    to_node = scale_elements_node
+    node_tree.links.new(random_value_node_output_socket, to_node.inputs["Selection"])
+
+    # ランダム値ノードを要素スケールノードのジオメトリへ接続
+    to_node = scale_elements_node
+    node_tree.links.new(geo_selection_node_output, to_node.inputs["Geometry"])
+
+    return scale_elements_node
+
+
+# 面を分離し、大きさのアニメーション化を行なう関数
+def separate_faces_and_animate_scale(node_tree, node_x_location, node_location_step_x):
+
+    # ジオメトリ分離ノードの作成
+    separate_geometry_node, node_x_location = create_separate_geo_node(
+        node_tree,
+        node_x_location,
+        node_location_step_x,
+    )
+
+    # ジオメトリ分離ノードから要素スケールノードへ選択経由と反転経由で接続
+    scale_elements_geo_nodes = []
+    top_scale_elements_node = create_scale_element_geo_node(
+        node_tree,
+        separate_geometry_node.outputs["Selection"],
+        node_x_location,
+        node_y_location=200,
+    )
+    scale_elements_geo_nodes.append(top_scale_elements_node)
+
+    bottom_scale_elements_node = create_scale_element_geo_node(
+        node_tree,
+        separate_geometry_node.outputs["Inverted"],
+        node_x_location,
+        node_y_location=-200,
+    )
+    scale_elements_geo_nodes.append(bottom_scale_elements_node)
+
+    # Fカーブにサイクルモディファイアを追加
+    for fcurve in node_tree.animation_data.action.fcurves.values():
+        fcurve.modifiers.new(type="CYCLES")
+
+    node_x_location += node_location_step_x
+
+    # ジオメトリ結合ノードの作成
+    join_geometry_node, node_x_location = create_node(
+        node_tree, "GeometryNodeJoinGeometry", node_x_location, node_location_step_x
+    )
+
+    # 2つの要素スケールノードをジオメトリ結合ノードへ接続
+    for node in scale_elements_geo_nodes:
+        from_node = node
+        to_node = join_geometry_node
+        node_tree.links.new(from_node.outputs["Geometry"], to_node.inputs["Geometry"])
+
+    return separate_geometry_node, join_geometry_node, node_x_location
 
 
 def update_geo_node_tree(node_tree):
     """
     立方体メッシュ、細分化、三角化、辺分離、要素スケール
     ジオメトリノードをノードツリーに追加
+    ノード参照:https://docs.blender.org/api/current/bpy.types.GeometryNode.html
     """
 
     out_node = node_tree.nodes["Group Output"]
@@ -201,28 +355,47 @@ def update_geo_node_tree(node_tree):
     node_x_location = 0
     node_location_step_x = 300
 
+    # 立方体メッシュノードの作成
     mesh_cube_node, node_x_location = create_node(
-        node_tree, "GeometryNodeMeshCube", node_x_location, node_location_step_x
+        node_tree,
+        "GeometryNodeMeshCube",
+        node_x_location,
+        node_location_step_x,
     )
 
+    # 細分化ノードの作成
     subdivide_mesh_node, node_x_location = create_node(
-        node_tree, "GeometryNodeSubdivideMesh", node_x_location, node_location_step_x
+        node_tree,
+        "GeometryNodeSubdivideMesh",
+        node_x_location,
+        node_location_step_x,
     )
     subdivide_mesh_node.inputs["Level"].default_value = 3
 
+    # 三角化ノードの作成
     triangulate_node, node_x_location = create_node(
-        node_tree, "GeometryNodeTriangulate", node_x_location, node_location_step_x
+        node_tree,
+        "GeometryNodeTriangulate",
+        node_x_location,
+        node_location_step_x,
     )
 
+    # 辺分離ノードの作成
     split_edges_node, node_x_location = create_node(
-        node_tree, "GeometryNodeSplitEdges", node_x_location, node_location_step_x
+        node_tree,
+        "GeometryNodeSplitEdges",
+        node_x_location,
+        node_location_step_x,
     )
 
-    scale_elements_node, node_x_location = create_node(
-        node_tree, "GeometryNodeScaleElements", node_x_location, node_location_step_x
+    # 要素スケールノード、ジオメトリ結合ノードの配置
+    separate_geometry_node, join_geometry_node, node_x_location = (
+        separate_faces_and_animate_scale(
+            node_tree, node_x_location, node_location_step_x
+        )
     )
-    scale_elements_node.inputs["Scale"].default_value = 0.8
 
+    # 各ノードからグループ出力までのリンク接続
     out_node.location.x = node_x_location
 
     link_nodes_by_mesh_socket(
@@ -236,14 +409,15 @@ def update_geo_node_tree(node_tree):
     )
 
     from_node = split_edges_node
-    to_node = scale_elements_node
+    to_node = separate_geometry_node
     node_tree.links.new(from_node.outputs["Mesh"], to_node.inputs["Geometry"])
 
-    from_node = scale_elements_node
+    from_node = join_geometry_node
     to_node = out_node
     node_tree.links.new(from_node.outputs["Geometry"], to_node.inputs["Geometry"])
 
 
+# ジオメトリノードを作成する関数
 def create_centerpiece():
     bpy.ops.mesh.primitive_plane_add()
 
@@ -254,6 +428,9 @@ def create_centerpiece():
     update_geo_node_tree(node_tree)
 
     bpy.ops.object.modifier_add(type="SOLIDIFY")
+
+    # 最後にジオメトリノード モディファイアをアクティブ モードにする
+    bpy.context.active_object.modifiers["GeometryNodes"].is_active = True
 
 
 def main():
