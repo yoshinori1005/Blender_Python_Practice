@@ -1,5 +1,6 @@
 import bpy
 import random
+import math
 
 
 def clear_scene():
@@ -13,7 +14,16 @@ def clear_scene():
     )
 
 
-clear_scene()
+# 既存のオブジェクトを削除
+def ObjectDeleter():
+    bpy.ops.object.select_all(action="DESELECT")
+    bpy.ops.object.select_by_type(type="MESH")
+    bpy.ops.object.delete()
+    bpy.ops.object.select_by_type(type="CURVE")
+    bpy.ops.object.delete()
+
+
+# clear_scene()
 
 # ランダムなオブジェクトの追加
 # オブジェクトタイプの作成
@@ -154,7 +164,7 @@ for node in nodes:
     nodes.remove(node)
 # ノードの作成
 output_node = nodes.new(type="ShaderNodeOutputMaterial")
-output_node.location = (400, 0)
+output_node.location = (200, 0)
 
 emission_node = nodes.new(type="ShaderNodeEmission")
 emission_node.location = (0, 0)
@@ -175,3 +185,250 @@ if obj and obj.type == "MESH":
         obj.data.materials.append(mat)
 else:
     print("アクティブオブジェクトが見つからないか、メッシュではありません")
+
+clear_scene()
+
+# カーブを作成し、メッシュを沿わせる
+# 円形のカーブを作成
+bpy.ops.curve.primitive_bezier_circle_add(radius=3)
+curve = bpy.context.object
+curve.name = "Circle_Curve"
+
+# 立方体を作成
+bpy.ops.mesh.primitive_cube_add(size=1)
+cube = bpy.context.object
+cube.name = "Cube"
+
+# カーブモディファイアを追加
+modifier = cube.modifiers.new(name="CurveFollow", type="CURVE")
+modifier.object = curve
+# X軸方向に沿わせる
+modifier.deform_axis = "POS_X"
+
+# 立方体の位置をカーブの始点に調整
+cube.location = (3, 0, 0)
+
+# ランダムなモディファイアの適用
+modifier_types = ["SUBSURF", "SOLIDIFY", "WIREFRAME"]
+
+for i in range(1):
+    bpy.ops.mesh.primitive_torus_add()
+    torus = bpy.context.active_object
+    modifier_type = random.choice(modifier_types)
+    if modifier_type == "SUBSURF":
+        bpy.ops.object.modifier_add(type=modifier_types[0])
+    elif modifier_type == "SOLIDIFY":
+        bpy.ops.object.modifier_add(type=modifier_types[1])
+    elif modifier_type == "WIREFRAME":
+        bpy.ops.object.modifier_add(type=modifier_types[2])
+
+# すべてのオブジェクトのモディファイアを適用
+bpy.ops.object.select_all()
+for obj in bpy.data.objects:
+    if obj.type == "MESH":
+        for mod in obj.modifiers:
+            bpy.ops.object.modifier_apply(modifier=mod.name)
+
+# オブジェクトをカーブに沿ってアニメーション
+frame_start = 1
+frame_end = 100
+cube = bpy.data.objects.get("Cube")
+cube.location = (0, 0, 0)
+cube.keyframe_insert("location", frame=frame_start, index=0)
+cube.location = (18.8, 0, 0)
+cube.keyframe_insert("location", frame=frame_end, index=0)
+
+# Fカーブの取得と補間設定（リニア補間）
+action = cube.animation_data.action
+if action:
+    for fcurve in action.fcurves:
+        fcurve.modifiers.new(type="CYCLES")
+        # X軸の動き
+        if fcurve.data_path == "location" and fcurve.array_index == 0:
+            for kp in fcurve.keyframe_points:
+                # 補間をリニアに変更
+                kp.interpolation = "LINEAR"
+
+# ボリュームを持つオブジェクトの作成
+# bpy.ops.mesh.primitive_cube_add(size=3)
+# cube_2 = bpy.context.object
+# cube_2.name = "Volume_Cube"
+
+# ボリュームオブジェクトを作成
+# bpy.ops.object.volume_add()
+# volume = bpy.context.object
+# volume.name = "Volume_Object"
+
+# VDBファイルをボリュームに適用(事前にVDBファイルのパスを指定)
+# Blenderの相対パス
+# vdb_filepath="ファイル名.vdb"
+# volume.data.filepath=vdb_filepath
+# VDBがアニメーションシーケンスでない場合
+# volume.data.is_sequence=False
+
+# 立方体にボリュームモディファイアを追加
+# modifier = cube_2.modifiers.new(name="VolumeModifier", type="VOLUME_TO_MESH")
+# modifier.object = volume
+
+# ボリュームの設定調整
+# modifier.threshold = 0.1
+# modifier.density = 1.0
+
+# ランダムな回転アニメーション
+# モンキーを追加
+bpy.ops.mesh.primitive_monkey_add()
+monkey = bpy.context.active_object
+
+
+# ランダムな回転値の範囲を設定
+monkey.rotation_euler = (
+    random.uniform(0, math.radians(360)),
+    random.uniform(0, math.radians(360)),
+    random.uniform(0, math.radians(360)),
+)
+
+monkey.keyframe_insert("rotation_euler", frame=frame_start)
+
+monkey.rotation_euler = (
+    random.uniform(0, math.radians(360)),
+    random.uniform(0, math.radians(360)),
+    random.uniform(0, math.radians(360)),
+)
+
+monkey.keyframe_insert("rotation_euler", frame=frame_end)
+
+monkey_action = monkey.animation_data.action
+
+if monkey_action:
+    # ループモディファイアを追加してループアニメーション化
+    for fcurve in monkey_action.fcurves:
+        fcurve.modifiers.new(type="CYCLES")
+
+        # 線形補間設定
+        if fcurve.data_path.startswith("rotation_euler"):
+            for kp in fcurve.keyframe_points:
+                kp.interpolation = "LINEAR"
+
+# 複数のオブジェクトをランダムに動かす
+for i in range(5):
+    bpy.ops.mesh.primitive_cone_add()
+    cone = bpy.context.object
+    cone.location.x += i * 3
+
+frame_start = 1
+frame_end = 100
+move_range = 5
+
+# シーン内のすべてのオブジェクトから MESH タイプで
+# アニメーションのついてないものを取得
+objects = [
+    obj
+    for obj in bpy.context.scene.objects
+    if obj.type == "MESH" and obj.animation_data is None
+]
+
+# 各オブジェクトに対してアニメーションを適用
+for obj in objects:
+    # オブジェクトの初期位置
+    start_location = obj.location.copy()
+
+    # ランダムな移動先を設定
+    end_location = (
+        start_location.x + random.uniform(-move_range, move_range),
+        start_location.y + random.uniform(-move_range, move_range),
+        start_location.z + random.uniform(-move_range, move_range),
+    )
+
+    # キーフレームの設定
+    obj.location = start_location
+    obj.keyframe_insert("location", frame=frame_start)
+
+    obj.location = end_location
+    obj.keyframe_insert("location", frame=frame_end)
+
+    # アニメーションデータの作成
+    obj.animation_data_create()
+    obj_action = obj.animation_data.action
+
+    if obj_action:
+        for fcurve in obj_action.fcurves:
+            if fcurve.data_path.startswith("location"):
+                # ループアニメーション(CYCLESモディファイアを追加)
+                fcurve.modifiers.new(type="CYCLES")
+
+                # 線形補間設定
+                for kp in fcurve.keyframe_points:
+                    kp.interpolation = "LINEAR"
+
+# シェイプキーを使ったアニメーション
+bpy.ops.mesh.primitive_monkey_add(location=(-3, 0, 0))
+obj = bpy.context.active_object
+
+if obj and obj.type == "MESH" and obj.animation_data is None:
+    # シェイプキーの作成(ベースキーがない場合は追加)
+    if obj.data.shape_keys is None:
+        # デフォルト形状の追加
+        obj.shape_key_add(name="Basis")
+
+    # 新しいシェイプキーの作成
+    shape_key = obj.shape_key_add(name="ShapeKey_1")
+
+    # シェイプキーの変形を適用
+    for vert in obj.data.vertices:
+        shape_key.data[vert.index].co.x += 0.5
+
+    # アニメーションの設定
+    frame_start = 1
+    frame_end = 100
+
+    # シェイプキーの影響度のキーフレーム設定
+    shape_key.value = 0.0
+    shape_key.keyframe_insert(data_path="value", frame=frame_start)
+
+    shape_key.value = 1.0
+    shape_key.keyframe_insert(data_path="value", frame=frame_end / 2)
+
+    shape_key.value = 0.0
+    shape_key.keyframe_insert(data_path="value", frame=frame_end)
+
+    # アニメーションデータの作成
+    obj.animation_data_create()
+    obj_action = obj.animation_data.action
+
+    if obj_action:
+        for fcurve in obj_action.fcurves:
+            if fcurve.data_path == f'key_block["{shape_key.name}"].value':
+                # ループアニメーション
+                fcurve.modifier.new(type="CYCLES")
+
+                # 線形補間設定
+                for kp in fcurve.keyframe_points:
+                    kp.interpolation = "LINEAR"
+
+
+# オブジェクトを制御するオペレーター
+class ObjectDeleter(bpy.types.Operator):
+    bl_idname = "object.delete_selected"
+    bl_label = "Delete Selected Objects"
+
+    def execute(self, context):
+        bpy.ops.object.delete()
+        return {"FINISHED"}
+
+
+bpy.utils.register_class(ObjectDeleter)
+
+
+# モディファイアを適用するオペレーター
+class ApplyModifier(bpy.types.Operator):
+    bl_idname = "object.apply_modifiers"
+    bl_label = "Apply Modifier"
+
+    def execute(self, context):
+        obj = context.object
+        for mod in obj.modifiers:
+            bpy.ops.object.modifier_apply(modifier=mod.name)
+        return {"FINISHED"}
+
+
+bpy.utils.register_class(ApplyModifier)
