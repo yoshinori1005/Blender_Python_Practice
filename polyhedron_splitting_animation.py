@@ -1,3 +1,7 @@
+# ====================
+# 参考:https://www.artstation.com/artwork/nEQ4J4
+# ====================
+
 import bpy
 import math
 import random
